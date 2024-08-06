@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 import bcrypt
 import jwt
 import datetime
 
 from app.dependency import SQLSession
 from app.model.user import User
+from app.rest.auth_rest import *
 
 router = APIRouter()
 
@@ -15,19 +16,16 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 
-class RegisterRequest(BaseModel):
-    password: str
-    name: str
-    username: str
-
-
 @router.post("/register")
-async def register(req: RegisterRequest):
+async def register(req: RegisterRequest) -> None:
     session = SQLSession()
 
     user = session.query(User).filter_by(username=req.username).first()
     if user:
-        return {"message": "Username already exists"}
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Username already registered",
+        )
 
     salt = bcrypt.gensalt()
     password_hash = bcrypt.hashpw(req.password.encode('utf-8'), salt)
@@ -41,29 +39,11 @@ async def register(req: RegisterRequest):
     session.add(new_user)
 
     session.commit()
-    return req
-
-
-class LoginRequest(BaseModel):
-    username: str
-    password: str
-
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
-
-def create_access_token(data: dict):
-    to_encode = data.copy()
-    to_encode.update({"exp": datetime.datetime.now(datetime.UTC) +
-                     datetime.timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
+    return
 
 
 @router.post("/login")
-async def login(req: LoginRequest) -> Token:
+async def login(req: LoginRequest) -> LoginResponse:
     session = SQLSession()
 
     user = session.query(User).filter_by(username=req.username).first()
@@ -76,4 +56,18 @@ async def login(req: LoginRequest) -> Token:
     access_token = create_access_token(data={"sub": user.username})
 
     session.commit()
-    return {"access_token": access_token, "token_type": "Bearer"}
+
+    response = LoginResponse(
+        access_token=access_token,
+        token_type="Bearer"
+    )
+    return response
+
+
+# helpers
+def create_access_token(data: dict):
+    to_encode = data.copy()
+    to_encode.update({"exp": datetime.datetime.now(datetime.UTC) +
+                     datetime.timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
