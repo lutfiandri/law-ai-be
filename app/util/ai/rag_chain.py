@@ -84,9 +84,9 @@ def load_rag_chain_model():
         Jika tidak tahu jawabannya, katakan minta maaf dan katakan bahwa pertanyaan belum dapat dijawab dengan dataset saat ini
         Format jawaban harus dalam format list of object, seperti contoh berikut:
         {{"full_answer": "Rangkuman jawaban secara keseluruhan",
-        '"laws": [{{"jawaban": "pasal ini menyebutkan bahwa...", "undang-undang": "Undang-Undang Nomor ...","BAB": "BAB ..." "pasal": "Pasal ...", "ayat": ayat ...}},
-        {{"jawaban": "pasal ini menyebutkan bahwa...", "undang-undang": "Undang-Undang Nomor ...","BAB": "BAB ..." "pasal": "Pasal ...", "ayat": ayat ...}},
-        {{"jawaban": "pasal ini menyebutkan bahwa...", "undang-undang": "Undang-Undang Nomor ...","BAB": "BAB ..." "pasal": "Pasal ...", "ayat": ayat ...}}, dan seterusnya]}}'
+        '"laws": [{{"jawaban": "pasal ini menyebutkan bahwa...", "undang_undang": "Undang-Undang Nomor ...","bab": "BAB ..." "pasal": "Pasal ...", "ayat": ayat ...}},
+        {{"jawaban": "pasal ini menyebutkan bahwa...", "undang_undang": "Undang-Undang Nomor ...","bab": "BAB ..." "pasal": "Pasal ...", "ayat": ayat ...}},
+        {{"jawaban": "pasal ini menyebutkan bahwa...", "undang_undang": "Undang-Undang Nomor ...","bab": "BAB ..." "pasal": "Pasal ...", "ayat": ayat ...}}, dan seterusnya]}}'
         {context}
         """
     )
@@ -109,3 +109,13 @@ def load_rag_chain_model():
     print("Load RAG CHAIN success")
 
     return rag_chain
+
+
+def post_process_answer(answer):
+    # contoh answer ="```json\n{\"full_answer\": \"Seseorang yang mengendarai sepeda motor tanpa mengenakan helm yang memenuhi standar nasional Indonesia sebagaimana dimaksud dalam Pasal 106 ayat (8) Undang-Undang Nomor 22 Tahun 2009 tentang Lalu Lintas dan Angkutan Jalan, dipidana dengan pidana kurungan paling lama 1 (satu) bulan atau denda paling banyak Rp250.000,00 (dua ratus lima puluh ribu rupiah).\", \"laws\": [{\"jawaban\": \"Setiap orang yang mengemudikan Sepeda Motor dan Penumpang Sepeda Motor wajib mengenakan helm yang memenuhi standar nasional Indonesia sebagaimana dimaksud dalam Pasal 106 ayat (8) dipidana dengan pidana kurungan paling lama 1 (satu) bulan atau denda paling banyak Rp250.000,00 (dua ratus lima puluh ribu rupiah).\", \"undang-undang\": \"Undang-Undang Nomor 22 Tahun 2009 tentang Lalu Lintas dan Angkutan Jalan\", \"BAB\": \"BAB IX LALU LINTAS\", \"pasal\": \"Pasal 106\", \"ayat\": \"ayat (8)\"}, {\"jawaban\": \"Setiap orang yang mengemudikan Sepeda Motor tidak mengenakan helm standar nasional Indonesia sebagaimana dimaksud dalam Pasal 106 ayat (8) dipidana dengan pidana kurungan paling lama 1 (satu) bulan atau denda paling banyak Rp250.000,00 (dua ratus lima puluh ribu rupiah).\", \"undang-undang\": \"Undang-Undang Nomor 22 Tahun 2009 tentang Lalu Lintas dan Angkutan Jalan\", \"BAB\": \"BAB XX KETENTUAN PIDANA\", \"pasal\": \"Pasal 291\", \"ayat\": \"ayat (1)\"}, {\"jawaban\": \"Setiap orang yang mengemudikan Sepeda Motor yang membiarkan penumpangnya tidak mengenakan helm sebagaimana dimaksud dalam Pasal 106 ayat (8) dipidana dengan pidana kurungan paling lama 1 (satu) bulan atau denda paling banyak Rp250.000,00 (dua ratus lima puluh ribu rupiah).\", \"undang-undang\": \"Undang-Undang Nomor 22 Tahun 2009 tentang Lalu Lintas dan Angkutan Jalan\", \"BAB\": \"BAB XX KETENTUAN PIDANA\", \"pasal\": \"Pasal 291\", \"ayat\": \"ayat (2)\"}]}\n```"
+
+    answer = answer.strip("`")
+    answer = answer.strip("json")
+    answer = answer.strip("\n")
+
+    return answer
