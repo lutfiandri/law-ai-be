@@ -1,9 +1,10 @@
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
+import enum
 
 
-class AnswerLawResponse(BaseModel):
+class ChatAnswerLawResponse(BaseModel):
     jawaban: Optional[str] = None
     undang_undang: Optional[str] = None
     bab: Optional[str] = None
@@ -11,17 +12,22 @@ class AnswerLawResponse(BaseModel):
     ayat: Optional[str] = None
 
 
-class AnswerResponse(BaseModel):
+class ChatAnswerResponse(BaseModel):
     full_answer: str
-    laws: List[AnswerLawResponse]
+    laws: List[ChatAnswerLawResponse]
+
+
+class ChatType(enum.Enum):
+    first = "first"
+    followup = "followup"
 
 
 class ChatResponse(BaseModel):
     id: int
     session_id: int
-    type: Optional[str] = None
+    type: ChatType
     question: Optional[str] = None
-    answer: Optional[AnswerResponse] = None
+    answer: Optional[ChatAnswerResponse] = None
     question_at: Optional[datetime] = None
     answer_at: Optional[datetime] = None
 
