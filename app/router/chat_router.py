@@ -16,7 +16,7 @@ rag_chain = load_rag_chain_model()
 
 
 @router.post("/")
-async def create_session(req: CreateChatRequest, session_id: int) -> ChatResponse:
+async def create_chat(req: CreateChatRequest, session_id: int) -> ChatResponse:
     sql_session = SQLSession()
 
     # check session exists
@@ -57,3 +57,36 @@ async def create_session(req: CreateChatRequest, session_id: int) -> ChatRespons
     )
 
     return response
+
+
+@router.get("/")
+async def get_chats(session_id: int) -> List[ChatResponse]:
+    sql_session = SQLSession()
+
+    # check session exists
+    session = sql_session.query(Session).filter(
+        Session.id == session_id).first()
+    if not session:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Session not found",
+        )
+
+    chats = sql_session.query(Chat).where(Chat.session_id == session_id).all()
+
+    sql_session.commit()
+
+    responses = []
+    for chat in chats:
+        response = ChatResponse(
+            id=chat.id,
+            session_id=chat.session_id,
+            type=chat.type,
+            question=chat.question,
+            answer=json.loads(chat.answer) if chat.answer else None,
+            question_at=chat.question_at,
+            answer_at=chat.answer_at,
+        )
+        responses.append(response)
+
+    return responses
