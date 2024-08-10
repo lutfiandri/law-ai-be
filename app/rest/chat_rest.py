@@ -25,7 +25,8 @@ class ChatType(enum.StrEnum):
 class ChatResponse(BaseModel):
     id: int
     session_id: int
-    type: ChatType
+    # type: ChatType
+    type: str
     question: Optional[str] = None
     answer: Optional[ChatAnswerResponse] = None
     question_at: Optional[datetime] = None
@@ -33,5 +34,6 @@ class ChatResponse(BaseModel):
 
 
 class CreateChatRequest(BaseModel):
-    type: ChatType
+    # type: ChatType
+    type: str
     question: str
