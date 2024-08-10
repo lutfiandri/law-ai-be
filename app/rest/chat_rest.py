@@ -17,7 +17,7 @@ class ChatAnswerResponse(BaseModel):
     laws: List[ChatAnswerLawResponse]
 
 
-class ChatType(enum.Enum):
+class ChatType(enum.StrEnum):
     first = "first"
     followup = "followup"
 
