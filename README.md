@@ -6,6 +6,7 @@ Gemini API Developer Competition
 
 1. Use python v11
 2. Run `pip install -r requirements.txt`
+3. Run `fastapi dev` or `fastapi run`
 
 ## links
 

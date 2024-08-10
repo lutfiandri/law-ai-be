@@ -33,5 +33,5 @@ class ChatResponse(BaseModel):
 
 
 class CreateChatRequest(BaseModel):
-    type: str
+    type: ChatType
     question: str
