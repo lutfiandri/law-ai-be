@@ -47,7 +47,6 @@ async def login(req: LoginRequest) -> LoginResponse:
     session = SQLSession()
 
     user = session.query(User).filter_by(username=req.username).first()
-    print(user.__dict__)
     if user is None or not bcrypt.checkpw(req.password.encode('utf-8'), user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
