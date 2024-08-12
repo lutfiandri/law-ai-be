@@ -8,11 +8,11 @@ from app.dependency import SQLSession
 from app.model.session import Session
 from app.model.chat import Chat
 from app.rest.chat_rest import *
-from app.util.ai.rag_chain import load_rag_chain_model, post_process_answer
+from app.util.ai.rag_chain import create_retriever_and_chain, create_rag_chain, post_process_answer
 
 router = APIRouter()
 
-rag_chain = load_rag_chain_model()
+retriever, chain = create_retriever_and_chain()
 
 
 @router.post("/")
@@ -28,6 +28,25 @@ async def create_chat(req: CreateChatRequest, session_id: int) -> ChatResponse:
             detail="Session not found",
         )
 
+    # answer
+    rag_chain = create_rag_chain(retriever, chain)
+
+    # load history
+    chat_history = []
+    if req.type == "followup":
+        chats = sql_session.query(Chat).where(
+            Chat.session_id == session_id).all()
+        for chat in chats:
+            single_chat_history = [chat.question, chat.answer]
+            chat_history.extend(single_chat_history)
+
+    print("chat_history")
+    print(chat_history)
+    print()
+
+    qa = rag_chain.invoke(
+        {"input": req.question, "chat_history": chat_history})
+
     chat = Chat(
         session_id=session_id,
         type=req.type,
@@ -36,9 +55,6 @@ async def create_chat(req: CreateChatRequest, session_id: int) -> ChatResponse:
     )
 
     sql_session.add(chat)
-
-    # answer
-    qa = rag_chain.invoke({"input": req.question, "chat_history": []})
 
     chat.answer = post_process_answer(qa["answer"])
     chat.answer_at = datetime.now()

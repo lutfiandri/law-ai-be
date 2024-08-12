@@ -24,14 +24,12 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
 
 from app.util.ai.dataset import load_pdf
+from app.dependency import GOOGLE_API_KEY
 
 warnings.filterwarnings("ignore")
 
 
-GOOGLE_API_KEY = "AIzaSyD5RXtG0TH2WpdDgNy2Bm2P7oFibwPBKYU"
-
-
-def load_rag_chain_model():
+def create_retriever_and_chain():
     documents = load_pdf("data/ai")
 
     print("Load RAG CHAIN begin...")
@@ -101,13 +99,15 @@ def load_rag_chain_model():
     # use create_stuff_documents_chain to feed all retrieved context
 
     question_answer_chain = create_stuff_documents_chain(llm, qa_prompt)
+    print("Load RAG CHAIN success")
 
+    return history_aware_retriever, question_answer_chain
+
+
+def create_rag_chain(history_aware_retriever, question_answer_chain):
     rag_chain = create_retrieval_chain(
         history_aware_retriever, question_answer_chain
     )
-
-    print("Load RAG CHAIN success")
-
     return rag_chain
 
 
