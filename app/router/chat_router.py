@@ -1,5 +1,5 @@
 from typing import List
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Request, status
 from datetime import datetime
 import json
 import copy
@@ -16,12 +16,21 @@ retriever, chain = create_retriever_and_chain()
 
 
 @router.post("/")
-async def create_chat(req: CreateChatRequest, session_id: int) -> ChatResponse:
+async def create_chat(r: Request, req: CreateChatRequest, session_id: int) -> ChatResponse:
     sql_session = SQLSession()
 
+    user_id = None
+    try:
+        user_id = r.state.jwt['user']['id']
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Invalid token",
+        )
+
     # check session exists
-    session = sql_session.query(Session).filter(
-        Session.id == session_id).first()
+    session = sql_session.query(Session).where(
+        Session.id == session_id, Session.user_id == user_id).first()
     if not session:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -76,8 +85,17 @@ async def create_chat(req: CreateChatRequest, session_id: int) -> ChatResponse:
 
 
 @router.get("/")
-async def get_chats(session_id: int) -> List[ChatResponse]:
+async def get_chats(r: Request, session_id: int) -> List[ChatResponse]:
     sql_session = SQLSession()
+
+    user_id = None
+    try:
+        user_id = r.state.jwt['user']['id']
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Invalid token",
+        )
 
     # check session exists
     session = sql_session.query(Session).filter(
@@ -88,7 +106,8 @@ async def get_chats(session_id: int) -> List[ChatResponse]:
             detail="Session not found",
         )
 
-    chats = sql_session.query(Chat).where(Chat.session_id == session_id).all()
+    chats = sql_session.query(Chat).where(
+        Chat.session_id == session_id, Session.user_id == user_id).all()
 
     sql_session.commit()
 

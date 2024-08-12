@@ -10,7 +10,7 @@ class SessionResponse(BaseModel):
 
 class CreateSessionRequest(BaseModel):
     name: Optional[str] = None
-    user_id: Optional[int] = None
+    # user_id: Optional[int] = None
 
 
 class UpdateSessionRequest(BaseModel):

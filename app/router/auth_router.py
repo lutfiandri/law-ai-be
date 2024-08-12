@@ -47,13 +47,23 @@ async def login(req: LoginRequest) -> LoginResponse:
     session = SQLSession()
 
     user = session.query(User).filter_by(username=req.username).first()
+    print(user.__dict__)
     if user is None or not bcrypt.checkpw(req.password.encode('utf-8'), user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
         )
 
-    access_token = create_access_token(data={"sub": user.username})
+    data = {
+        "sub": user.username,
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "name": user.name
+        }
+    }
+
+    access_token = create_access_token(data=data)
 
     session.commit()
 

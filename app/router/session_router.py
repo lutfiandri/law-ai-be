@@ -1,5 +1,5 @@
 from typing import List
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Request
 
 from app.dependency import SQLSession
 from app.model.session import Session
@@ -9,12 +9,20 @@ router = APIRouter()
 
 
 @router.post("/")
-async def create_session(req: CreateSessionRequest) -> SessionResponse:
+async def create_session(r: Request, req: CreateSessionRequest) -> SessionResponse:
+    print(r.state.jwt)
+
+    user_id = None
+    try:
+        user_id = r.state.jwt['user']['id']
+    except:
+        pass
+
     sql_session = SQLSession()
 
     new_session = Session(
         name=req.name,
-        user_id=req.user_id
+        user_id=user_id
     )
 
     sql_session.add(new_session)
@@ -31,10 +39,20 @@ async def create_session(req: CreateSessionRequest) -> SessionResponse:
 
 
 @router.get("/")
-async def get_sessions() -> List[SessionResponse]:
+async def get_sessions(r: Request) -> List[SessionResponse]:
     sql_session = SQLSession()
 
-    sessions = sql_session.query(Session).all()
+    user_id = None
+    try:
+        user_id = r.state.jwt['user']['id']
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Invalid token",
+        )
+
+    query = sql_session.query(Session).where(Session.user_id == user_id)
+    sessions = query.all()
 
     sql_session.commit()
 
@@ -49,10 +67,20 @@ async def get_sessions() -> List[SessionResponse]:
 
 
 @router.get("/{id}")
-async def get_session(id: int) -> SessionResponse:
+async def get_session(r: Request, id: int) -> SessionResponse:
     sql_session = SQLSession()
 
-    session = sql_session.query(Session).where(Session.id == id).first()
+    user_id = None
+    try:
+        user_id = r.state.jwt['user']['id']
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Invalid token",
+        )
+
+    session = sql_session.query(Session).where(
+        Session.id == id, Session.user_id == user_id).first()
     if not session:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -71,10 +99,20 @@ async def get_session(id: int) -> SessionResponse:
 
 
 @router.put("/{id}")
-async def update_session(id: int, req: UpdateSessionRequest) -> SessionResponse:
+async def update_session(r: Request, id: int, req: UpdateSessionRequest) -> SessionResponse:
     sql_session = SQLSession()
 
-    session = sql_session.query(Session).filter(Session.id == id).first()
+    user_id = None
+    try:
+        user_id = r.state.jwt['user']['id']
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Invalid token",
+        )
+
+    session = sql_session.query(Session).filter(
+        Session.id == id, Session.user_id == user_id).first()
     if not session:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -97,10 +135,20 @@ async def update_session(id: int, req: UpdateSessionRequest) -> SessionResponse:
 
 
 @router.delete("/{id}")
-async def delete_session(id: int) -> None:
+async def delete_session(r: Request, id: int) -> None:
     sql_session = SQLSession()
 
-    session = sql_session.query(Session).filter(Session.id == id).first()
+    user_id = None
+    try:
+        user_id = r.state.jwt['user']['id']
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Invalid token",
+        )
+
+    session = sql_session.query(Session).filter(
+        Session.id == id, Session.user_id == user_id).first()
     if not session:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
