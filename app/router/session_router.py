@@ -10,7 +10,6 @@ router = APIRouter()
 
 @router.post("/")
 async def create_session(r: Request, req: CreateSessionRequest) -> SessionResponse:
-    print(r.state.jwt)
 
     user_id = None
     try:
