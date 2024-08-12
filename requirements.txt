@@ -1,5 +1,5 @@
 SQLAlchemy==2.0.25
-psycopg2==2.9.9
+psycopg2-binary==2.9.9
 fastapi==0.112.0
 fastapi-cli==0.0.5
 bcrypt==4.2.0
